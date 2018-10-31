@@ -3,7 +3,12 @@ use List::Compare;
 use strict;
 #use Bio::Util::codonUsage qw(translate);
 
-
+=head1 the purpose
+This script is to extract the sequence from refFlat file, which can be created with gtf or gff with UCSC tools gtfToGenePred
+It is still unknown why some sequence give wrong coding region, but these sequences, or id will be stored in a translate_warning files, with original DNA sequence and translation. 
+As a refrence, this warning file will also be taken to excluding them in the further analyses of PRF, which in this PolyA seq case, are CDS signal.
+For codon frequency, these warning data are not included as well.  
+=cut
 #---------------------------------------------------------------------------------------------------------------------------
 # Step 0.Assign numerical values to species,ge(gene),files1(FASTA file).
 # Hash %genome arrays are used to store genetic informationhash. 
@@ -37,6 +42,9 @@ open (W, ">ref/translate_warning.txt");
 open (Size, ">ref/CDS_intron_size.txt");
 print Size "gene_id\tlocus\ttranscript\tCDS\tCDS_intron\n";
 open (cds_exon, ">ref/CDS_exons.txt");
+#-----------------------------------------------------------------------------------------------------------------------------
+# Step 3.According to the GenePred annotation file, count the number of accumulated coding areas.
+#-----------------------------------------------------------------------------------------------------------------------------
 
 while (<REF>)   {
 	
@@ -47,33 +55,50 @@ while (<REF>)   {
    my $cds_count = 0;
    my $utr_count = 0;
    print "processing $a[0]\n";   #View progress,$a[0] is geneName.
-   # define CDS region, first get all exon
-   my @cds;
-    if ($a[7] - $a[6] > 0)   {
+   # define CDS region, first get all exon.
+   my @cds = 0;
+    if ($a[7] - $a[6] > 0)   {                               # cdsEnd-cdsStart,coding region.
 	   
-		for my $i ( 0..$a[8]-1 )  {
+		for my $i ( 0..$a[8]-1 )  {                  # 0~exonCount-1
 			
-			for my $j ($ins[$i]..$ine[$i]-1)  {
+			for my $j ($ins[$i]..$ine[$i]-1)  {  # Add elements from the first column,until exonCount is 0.
 				
-				push @cds, $j; }  }
+				push @cds, $j; }  }          # Push: add an element from the end of the array.
 		my $full = @cds;
-		#print "all=".join(",",@cds)."\n";
-		my @utrL; my @utrR;
-		@utrL = $a[4]..$a[6]-1 if $a[4] - $a[6] != 0;
-		@utrR = $a[7]..$a[5] if $a[5] - $a[7] != 0;
-		my $lcl = List::Compare->new(\@cds, \@utrL);
-		@cds = $lcl->get_unique;
-		# needs to sort by value, not sort by 
-		@cds = sort {$a <=> $b} @cds;
-		#print join(",",@cds)."\n";
+		print "all=".join(",",@cds)."\n";	     # Rough view the all Coding region.
+#---------------------------------------------------------------------------------------------------------------------------------------------
+# Step 4.According to the GenePred annotation file, calculate the position of the left untranslated region and the position of the right 
+# untranslated region.
+#---------------------------------------------------------------------------------------------------------------------------------------------	
+		my @utrL;                                    # Declaring array to utrL(the left of untranslated region).
+                my @utrR;			             # Declaring array to utrR(the right of untranslated region).
+		
+		@utrL = $a[4]..$a[6]-1 if $a[4] - $a[6] != 0;# When txStart > cdsStart,
+		                   			     # utrL = txStart(transcription start)~cdsStart(Coding region start).
+		@utrR = $a[7]..$a[5] if $a[5] - $a[7] != 0;  # When txEnd > cdsEnd,                     
+						             # utrR = cdsEnd(Coding region end)~txEnd(transcription end).
+#----------------------------------------------------------------------------------------------------------------------------------------------
+# Step 5.Compare elements of two lists (@cds and @utr)by the List::Compare module,get those items which appear only in the @cds list.
+# That is calculating the number of coding region excludes the number of untranslated region.
+# Then calculating the number of introns in the coding region.
+#----------------------------------------------------------------------------------------------------------------------------------------------
+		my $lcl = List::Compare->new(\@cds, \@utrL); # List::Compare - Compare elements of two or more lists.
+		@cds = $lcl->get_unique;		     # Get those items which appear (at least once) only in the @cds list.
+		@cds = sort {$a <=> $b} @cds;                # Sort by numerically.
+		print join(",",@cds)."\n";   
+                
 		my $lcr = List::Compare->new(\@cds, \@utrR);
 		@cds = $lcr->get_unique;
 		@cds = sort {$a <=> $b} @cds;
-		#print join(",",@cds)."\n";
-		my $CDS = @cds;
-		my $cds_intron = $a[7]-$a[6]-$CDS;
-		print Size "$a[0]\t$a[1]\t$full\t$CDS\t$cds_intron\n";
-			
+		print join(",",@cds)."\n";                   # Check the coding region to remove the left and right untranslated region.
+		
+		my $CDS = @cds;                              # The array @cds is assigned to the variable $CDS to get the length of the array.
+		my $cds_intron = $a[7]-$a[6]-$CDS;	     # The variable $cds_intron is cdsEnd - cdsStart - the count of coding region.
+		print Size "$a[0]\t$a[1]\t$full\t$CDS\t$cds_intron\n"; 
+# geneName\t name\t the_number_of_all_coding_region\t the_number_of_coding_region_excludes_the_number_of_untranslated_region\t the_number_of_introns_ in_the_coding_region.
+#-------------------------------------------------------------------------------------------------------------------------------------------------
+# Step 6.
+#-------------------------------------------------------------------------------------------------------------------------------------------------
 	my $seq; 
 	my %cds_exon;
 	my $position = $cds[0];
@@ -144,7 +169,6 @@ foreach my $c (keys %cod)   {
 	print hand4 "$c\t$aa\t$cod{$c}\n";}
 
 close hand4;
-
 
 
 
