@@ -4,22 +4,22 @@ use strict;
 #use Bio::Util::codonUsage qw(translate);
 
 =head1 the purpose
-This script is to extract the sequence from refFlat file, which can be created with gtf or gff with UCSC tools gtfToGenePred
+This script is to extract the sequence from GenePred file, which can be created with gtf or gff3 with UCSC tools gtfToGenePred or gff3ToGenePred.
 It is still unknown why some sequence give wrong coding region, but these sequences, or id will be stored in a translate_warning files, with original DNA sequence and translation. 
-As a refrence, this warning file will also be taken to excluding them in the further analyses of PRF, which in this PolyA seq case, are CDS signal.
+As a refrence, this warning file will also be taken to excluding them in the further analyses of PRF.
 For codon frequency, these warning data are not included as well.  
 =cut
 #---------------------------------------------------------------------------------------------------------------------------
 # Step 0.Assign numerical values to species,ge(gene),files1(FASTA file).
-# Hash %genome arrays are used to store genetic informationhash. 
+# Hash %genome arrays are used to store genetic information. 
 # Set the species name as a variable to facilitate scripts to run in large batches.
 #---------------------------------------------------------------------------------------------------------------------------
 mkdir "ref";
-my $ge = 0; my %genome = 0;my @files1 = <*.fa>;my @files2 = <*.txt>; my $species = "";  
+my $ge ; my %genome ; my $species = "";  
 #---------------------------------------------------------------------------------------------------------------------------
 #Step 1.Remove the first line of fasta files,and remove "enter".
 #---------------------------------------------------------------------------------------------------------------------------
-open (hand2, "/media/katniss/文件/C_elegans_Ensl_WBcel235/Sequence/BowtieIndex/genome.fa") or die $!;
+open (hand2, "/media/hp/Disk/DYY/reference/genome/$species/genome.fa") or die $!;
 while (<hand2>)   {
 	$_=~ s/\s+$//;
     if (/^>/)       {
@@ -34,13 +34,13 @@ close hand2;
 #Use GenePred reference file the annotate the peaks, either at 3' end or internal CDS.
 #---------------------------------------------------------------------------------------------------------------------------	
 	
-my %cds = 0; my %utr = 0; my %cod = 0;
-open (REF, "/media/katniss/文件/C_elegans_Ensl_WBcel235/Genes/refFlat.txt") or die $!;
+my %cds ; my %utr ; my %cod ;
+open (REF, "media/hp/Disk/DYY/reference/annotation/$species/ref.txt") or die $!;
 open (Seq, ">ref/CDS_DNA.fa");  
 open (P, ">ref/CDS_pep.fa");
 open (W, ">ref/translate_warning.txt");
 open (Size, ">ref/CDS_intron_size.txt");
-print Size "gene_id\tlocus\ttranscript\tCDS\tCDS_intron\n";
+print Size "gene_id\ttranscript\tCDS\tCDS_intron\n";
 open (cds_exon, ">ref/CDS_exons.txt");
 #-----------------------------------------------------------------------------------------------------------------------------
 # Step 3.According to the GenePred annotation file, count the number of accumulated coding areas.
@@ -49,20 +49,20 @@ open (cds_exon, ">ref/CDS_exons.txt");
 while (<REF>)   {
 	
    chomp;     #Remove the "enter" at the end of the string.
-   my @a = split /\t/;
-   my @ins = split /,/, $a[9];
-   my @ine = split /,/, $a[10];
+   my @a = split /\t/;                                       # GenePred files separated by "Tab".
+   my @ins = split /,/, $a[8];                               # exonStarts(Exon start positions)separated by commas.
+   my @ine = split /,/, $a[9];                               # exonEnds(Exon End positions)separated by commas.
    my $cds_count = 0;
    my $utr_count = 0;
-   print "processing $a[0]\n";   #View progress,$a[0] is geneName.
+   print "processing $a[0]\n";                               #View progress,$a[0] is geneName.
    # define CDS region, first get all exon.
-   my @cds = 0;
-    if ($a[7] - $a[6] > 0)   {                               # cdsEnd-cdsStart,coding region.
+   my @cds ;
+    if ($a[6] - $a[5] > 0)   {                               # cdsEnd-cdsStart,coding region.
 	   
-		for my $i ( 0..$a[8]-1 )  {                  # 0~exonCount-1
+		for my $i ( 0..$a[7]-1 )  {                  # 0~exonCount-1
 			
-			for my $j ($ins[$i]..$ine[$i]-1)  {  # Add elements from the first column,until exonCount is 0.
-				
+			for my $j ($ins[$i]..$ine[$i]-1)  {  # Add elements from exonEnds the first column to exonEnds the zero column,column++
+				                             # until exonCount is 0.
 				push @cds, $j; }  }          # Push: add an element from the end of the array.
 		my $full = @cds;
 		print "all=".join(",",@cds)."\n";	     # Rough view the all Coding region.
@@ -70,12 +70,12 @@ while (<REF>)   {
 # Step 4.According to the GenePred annotation file, calculate the position of the left untranslated region and the position of the right 
 # untranslated region.
 #---------------------------------------------------------------------------------------------------------------------------------------------	
-		my @utrL;                                    # Declaring array to utrL(the left of untranslated region).
-                my @utrR;			             # Declaring array to utrR(the right of untranslated region).
+		my @utrL ;                               # Declaring array to utrL(the left of untranslated region).
+                my @utrR ;			             # Declaring array to utrR(the right of untranslated region).
 		
-		@utrL = $a[4]..$a[6]-1 if $a[4] - $a[6] != 0;# When txStart > cdsStart,
+		@utrL = $a[3]..$a[5]-1 if $a[3] - $a[5] != 0;# When txStart > cdsStart,
 		                   			     # utrL = txStart(transcription start)~cdsStart(Coding region start).
-		@utrR = $a[7]..$a[5] if $a[5] - $a[7] != 0;  # When txEnd > cdsEnd,                     
+		@utrR = $a[6]..$a[4] if $a[4] - $a[6] != 0;  # When txEnd > cdsEnd,                     
 						             # utrR = cdsEnd(Coding region end)~txEnd(transcription end).
 #----------------------------------------------------------------------------------------------------------------------------------------------
 # Step 5.Compare elements of two lists (@cds and @utr)by the List::Compare module,get those items which appear only in the @cds list.
@@ -93,87 +93,90 @@ while (<REF>)   {
 		print join(",",@cds)."\n";                   # Check the coding region to remove the left and right untranslated region.
 		
 		my $CDS = @cds;                              # The array @cds is assigned to the variable $CDS to get the length of the array.
-		my $cds_intron = $a[7]-$a[6]-$CDS;	     # The variable $cds_intron is cdsEnd - cdsStart - the count of coding region.
-		print Size "$a[0]\t$a[1]\t$full\t$CDS\t$cds_intron\n"; 
-# geneName\t name\t the_number_of_all_coding_region\t the_number_of_coding_region_excludes_the_number_of_untranslated_region\t the_number_of_introns_ in_the_coding_region.
+		my $cds_intron = $a[6]-$a[5]-$CDS;	     # The variable $cds_intron is cdsEnd - cdsStart - the count of coding region.
+		print Size "$a[0]\t$full\t$CDS\t$cds_intron\n"; 
+# geneName\t the_number_of_all_coding_region\t the_number_of_coding_region_excludes_the_number_of_untranslated_region\t the_number_of_introns_ # # # ## in_the_coding_region.
 #-------------------------------------------------------------------------------------------------------------------------------------------------
-# Step 6.
+# Step 6.Calculating the number of exons in the coding region.
 #-------------------------------------------------------------------------------------------------------------------------------------------------
-	my $seq; 
-	my %cds_exon;
-	my $position = $cds[0];
+	my $seq ; 					     
+	my %cds_exon ;
+	my $position = $cds[0];                                                  # Position is the first element of codon region sequence.
 	my $ex_number = 1;
 
 	foreach my $i (@cds)  {
-		if ($i <= $position + 1)  {
+		if ($i <= $position + 1)  {                                      #If()loop function,count the number of exon in coding region.
 			#print "$i,$position\t";
-			$cds_exon{$ex_number} .= substr($genome{$a[2]}, $i, 1) ;
+			$cds_exon{$ex_number} .= substr($genome{$a[1]}, $i, 1) ; #Substr($string,offset,length)function,intercept the chromosome name 
 			$position ++;  }
 		else {
 			$ex_number ++;
 			#print "\n\n";
-			$cds_exon{$ex_number} .= substr($genome{$a[2]}, $i, 1) ;
-			$position = $i;  }
+			$cds_exon{$ex_number} .= substr($genome{$a[1]}, $i, 1) ;
+			$position = $i;  }					 #
 		
-		$seq .= substr($genome{$a[2]}, $i, 1) ;
-		$seq =~ tr/atcg/ATCG/;  #some sequence are in lower case
-		}
+		$seq .= substr($genome{$a[1]}, $i, 1) ;
+		$seq =~ tr/atcg/ATCG/;                                           # FASTA file,some sequence are in lower case,
+		}                                                                # but perl language distinguishes between uppercase and   
+                                                                                 # lowercase letters.
 		
-	if ($a[3] eq '-')  {
-		foreach my $id (keys %cds_exon)  {
-			$cds_exon{$id} = reverse $cds_exon{$id};
+	if ($a[2] eq '-')  {                                                     # eq "==",eq usually comparing strings.When - for strand.
+		foreach my $id (keys %cds_exon)  {                               # Take out the keys from %cds_exon.
+			$cds_exon{$id} = reverse $cds_exon{$id};                 # Get the exon in coding region of anti-chain.
 			$cds_exon{$id} =~ tr/ATCG/TAGC/;  }
 
-		$seq = reverse $seq;
+		$seq = reverse $seq;						 # Get the anti-chain.
 		$seq =~ tr/ATCG/TAGC/;  }
 
-	#report the cds exons
 	
-	if ( $a[3] eq "-")  {
-		my $exon_order = 1;
-		foreach my $id (sort {$b <=> $a} keys %cds_exon)  {
-			print cds_exon ">$a[0]\_$a[1]\_exon_$exon_order\n$cds_exon{$id}\n";
+	
+	if ( $a[2] eq "-")  {                                                    # When - for DNA strand. 
+		my $exon_order = 1;                                              
+		foreach my $id (sort {$b <=> $a} keys %cds_exon)  {              # Arrange keys from small to large.
+			print cds_exon ">$a[0]\_exon_$exon_order\n$cds_exon{$id}\n";
 			$exon_order ++; } 
 	}
-	else {
-		foreach my $id (sort {$a <=> $b} keys %cds_exon)  {
-			print cds_exon ">$a[0]\_$a[1]\_exon_$id\n$cds_exon{$id}\n"; }
+	else { 								         # When + for DNA stamd.
+		foreach my $id (sort {$a <=> $b} keys %cds_exon)  {              # Arrange keys from large to small. 
+			print cds_exon ">$a[0]\_exon_$id\n$cds_exon{$id}\n"; }
 	}
-
-
+# Output cds_exon form: geneName\ Corresponding exon \ Corresponding conding region.
+#----------------------------------------------------------------------------------------------------------------------------------------------
+# Step 7.Calculate the amino acid chain that the current DNA strand will translate according to the central rule.
+#----------------------------------------------------------------------------------------------------------------------------------------------
 	my $protein; 
 	for ( my $i = 0; $i < length($seq)-1; $i += 3 )    {
-		my $aa = translate(substr($seq, $i, 3));
-		$protein .= $aa; }
+		my $aa = translate(substr($seq, $i, 3));                         # substr()funcution gets codons(adjacent three nucleotides).
+		$protein .= $aa; }                                               # We all know that three nucleotides correspond to one amino acid.
 
-	if ($protein !~ /X|^.+\*.+$/ and $protein =~ /^M.+\*$/)  {
+	if ($protein !~ /X|^.+\*.+$/ and $protein =~ /^M.+\*$/)  {               # When three codons do not contain X or *, but start with M.
 	
-		print Seq ">$a[0]\_$a[1]\n$seq\n";
-		print P ">$a[0]\_$a[1]\n$protein\n";
+		print Seq ">$a[0]\n$seq\n";                                      # Output Seq form: geneName\sequence
+		print P ">$a[0]\n$protein\n";                                    # Output P form:geneName\corresponding protein
 		# count codons in proteins that are 
 		# 1, started with ATG and stop with stop codons
-		# 2, no internal * and no irrugular X, here X are not right codon, either cotain N or not 3 nt
+		# 2, no internal * and no irrugular X, here X are not right codon, either cotain N or not 3 nt.
 		for ( my $i = 0; $i < length($seq)-1; $i += 3 )    {
-			my $cod = substr($seq, $i, 3);
+			my $cod = substr($seq, $i, 3);                           # Get codons.
 			$cod{$cod} ++; }      }
 	else {	
-		print W ">$a[0]\_$a[1]\n$protein\n$seq\n";}
+		print W ">$a[0]\n$protein\n$seq\n";}                             # Until sequence end,output geneName\corresponding protein\seq
 	}  }
 		
 close REF; close Seq; close cds_exon;	
 
 open (hand4, ">ref/codon_frequency.txt");
 
-foreach my $c (keys %cod)   {
+foreach my $c (keys %cod)   {                                                    # Take out the keys from %cod(codons hash).
 	my $aa = translate($c);
-	print hand4 "$c\t$aa\t$cod{$c}\n";}
+	print hand4 "$c\t$aa\t$cod{$c}\n";}                                      
 
 close hand4;
 
 
 
 
-sub translate {
+sub translate {                                                 # In the translation process, adjacent three nucleotides correspond to one amino acid.
  my ($cod) = shift;
  
  my (%codon2aa) = (
@@ -244,7 +247,7 @@ sub translate {
     'GGT' => 'G',    # Glycine
     );
  
- if (exists $codon2aa{$cod}) {
+ if (exists $codon2aa{$cod}) {					# Some codons cannot correspond to the standard codon table.
   	return $codon2aa{$cod};  } 
  else { 
 	print "warning, $cod is not a codon\n";
