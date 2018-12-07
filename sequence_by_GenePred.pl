@@ -15,16 +15,20 @@ For codon frequency, these warning data are not included as well.
 # Set the species name as a variable to facilitate scripts to run in large batches.
 #---------------------------------------------------------------------------------------------------------------------------
 mkdir "ref";
-my $ge ; my %genome ; my $species = "";  
-#---------------------------------------------------------------------------------------------------------------------------
+my $ge ; my %genome; my $species = "Arabidopsis_thaliana" ;  
+#---------------------------------------------------------A------------------------------------------------------------------
 #Step 1.Remove the first line of fasta files,and remove "enter".
 #---------------------------------------------------------------------------------------------------------------------------
-open (hand2, "/media/hp/Disk/DYY/reference/genome/$species/genome.fa") or die $!;
+open (hand2, "/media/hp/disk1/DYY/reference/genome/$species/genome.fa") or die $!;
 while (<hand2>)   {
 	$_=~ s/\s+$//;
-    if (/^>/)       {
+    if (/^>/)       {        # If the ">" symbol is found in reference gennome file.
     $ge=$_;
-    $ge=~ s/^>//;
+    $ge=~ s/^>//;            # Remove the ">" symbol.
+    $ge=~ s/ .+$//;          # Remove the space bar and the content behind it.Beacause the reference genome file from NCBI,The naming rule for each line of 
+                             #  the fasta file is that there is other information besides the id information. In order to extract the information later, only    
+                             #  the id information is extracted. 
+    print "$ge\n";           
     next;}
     $genome{$ge} .= $_; }
 
@@ -35,7 +39,7 @@ close hand2;
 #---------------------------------------------------------------------------------------------------------------------------	
 	
 my %cds ; my %utr ; my %cod ;
-open (REF, "media/hp/Disk/DYY/reference/annotation/$species/ref.txt") or die $!;
+open (REF, "/media/hp/disk1/DYY/reference/annotation/$species/ref.txt") or die $!;
 open (Seq, ">ref/CDS_DNA.fa");  
 open (P, ">ref/CDS_pep.fa");
 open (W, ">ref/translate_warning.txt");
@@ -56,7 +60,7 @@ while (<REF>)   {
    my $utr_count = 0;
    print "processing $a[0]\n";                               #View progress,$a[0] is geneName.
    # define CDS region, first get all exon.
-   my @cds ;
+   my @cds = ();
     if ($a[6] - $a[5] > 0)   {                               # cdsEnd-cdsStart,coding region.
 	   
 		for my $i ( 0..$a[7]-1 )  {                  # 0~exonCount-1
@@ -65,13 +69,13 @@ while (<REF>)   {
 				                             # until exonCount is 0.
 				push @cds, $j; }  }          # Push: add an element from the end of the array.
 		my $full = @cds;
-		print "all=".join(",",@cds)."\n";	     # Rough view the all Coding region.
+		#print "all=".join(",",@cds)."\n";	     # Rough view the all Coding region.
 #---------------------------------------------------------------------------------------------------------------------------------------------
 # Step 4.According to the GenePred annotation file, calculate the position of the left untranslated region and the position of the right 
 # untranslated region.
 #---------------------------------------------------------------------------------------------------------------------------------------------	
-		my @utrL ;                               # Declaring array to utrL(the left of untranslated region).
-                my @utrR ;			             # Declaring array to utrR(the right of untranslated region).
+		my @utrL = ();                               # Declaring array to utrL(the left of untranslated region).
+                my @utrR = ();			             # Declaring array to utrR(the right of untranslated region).
 		
 		@utrL = $a[3]..$a[5]-1 if $a[3] - $a[5] != 0;# When txStart > cdsStart,
 		                   			     # utrL = txStart(transcription start)~cdsStart(Coding region start).
@@ -85,12 +89,12 @@ while (<REF>)   {
 		my $lcl = List::Compare->new(\@cds, \@utrL); # List::Compare - Compare elements of two or more lists.
 		@cds = $lcl->get_unique;		     # Get those items which appear (at least once) only in the @cds list.
 		@cds = sort {$a <=> $b} @cds;                # Sort by numerically.
-		print join(",",@cds)."\n";   
+		#print join(",",@cds)."\n";   
                 
 		my $lcr = List::Compare->new(\@cds, \@utrR);
 		@cds = $lcr->get_unique;
 		@cds = sort {$a <=> $b} @cds;
-		print join(",",@cds)."\n";                   # Check the coding region to remove the left and right untranslated region.
+		#print join(",",@cds)."\n";                   # Check the coding region to remove the left and right untranslated region.
 		
 		my $CDS = @cds;                              # The array @cds is assigned to the variable $CDS to get the length of the array.
 		my $cds_intron = $a[6]-$a[5]-$CDS;	     # The variable $cds_intron is cdsEnd - cdsStart - the count of coding region.
