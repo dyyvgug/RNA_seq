@@ -1,5 +1,5 @@
 # RNAseq
-step 1: Download SRA files, high-throughput raw sequencing data.
+××step 1: Download SRA files, high-throughput raw sequencing data.××
   method one:using the prefetch function of the SRA-tools.
   E.g:download SRR3589957-SRR3589965(RNAseq of Homo sapiens 293 cell line)
   
