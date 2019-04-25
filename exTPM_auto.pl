@@ -16,22 +16,20 @@ foreach my $file (@list){
 open (hand1, ">$Dir/$file.T");	
 while(<FH>){
 	chomp;
-	if (/reference_id \"(.+?)\";.+ref_gene_id \"(.+?)\";.+FPKM \"(.+)\";.+TPM \"(.+)\";/)     {
+	if (/transcript_id \"(.+?)\";.+ref_gene_name \"(.+?)\";.+FPKM \"(.+)\";.+TPM \"(.+)\";/)     {
 
 		#print "$1\t$2\t$3\t$4\n";
-		my $ref_id = $1;
-		my $gene_id = $2;
+		my $transcript_id = $1;
+		my $gene_name = $2;
 		my $fpkm = $3;
 		my $tpm = $4;
-		print hand1 "$ref_id\t$gene_id\t$fpkm\t$tpm\n";  }
+		print hand1 "$transcript_id\t$gene_name\t$fpkm\t$tpm\n";  }
 
 
 }
 print "\n";
 close(FH) ;close(hand1);
 } 
-
-
 
 
 
