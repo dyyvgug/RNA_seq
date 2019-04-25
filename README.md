@@ -3,10 +3,10 @@
   method one:using the prefetch function of the SRA-tools.
     E.g:download SRR3589957-SRR3589965(RNAseq of *Homo sapiens* 293 cell line)
   
-      for i in `seq 57 65`;
-      do    
-      prefetch SRR35899${i}
-      done
+    for i in `seq 57 65`;
+    do    
+    prefetch SRR35899${i}
+    done
   method two:using the FTP protocol.
     E.g:download SRR5422017-SRR5422019(RNAseq of *Saccharomyces cerevisiae*)
     
