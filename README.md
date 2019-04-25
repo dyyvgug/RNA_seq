@@ -10,10 +10,10 @@
   method two:using the FTP protocol.
     E.g:download SRR5422017-SRR5422019(RNAseq of *Saccharomyces cerevisiae*)
     
-      for i in `seq 7 9`;
-	    do
-	    wget -c -t 0 ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByRun/sra/SRR/SRR542/SRR542201${i}/SRR542201${i}.sra	#new
-	    done
+    for i in `seq 7 9`;
+    do
+    wget -c -t 0 ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByRun/sra/SRR/SRR542/SRR542201${i}/SRR542201${i}.sra	#new
+    done
   method three:using Entrez Direct package.
     E.g:download all SRA files under the SRP091493 project number and unzip those SRA file.
   
