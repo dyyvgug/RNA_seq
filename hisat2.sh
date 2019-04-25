@@ -1,8 +1,12 @@
 #!/bin/bash
 
-for i in `seq 10 57`
+cd /media/hp/disk1/DYY/sra_fq_RNAseq/Bacillus_subtilis/experiment1
+for item in $(ls *.sra)
 do
-	hisat2 -p 8 -t --dta -x /media/hp/disk1/DYY/reference/index/mouse_mm10/genome_index -1 /media/hp/disk1/DYY/sra_fq_RNAseq/mouse_mm10/experiment3/fastq/SRR76618${i}.sra_1.fastq.gz -2 /media/hp/disk1/DYY/sra_fq_RNAseq/mouse_mm10/experiment3/fastq/SRR76618${i}.sra_2.fastq.gz -S ./SRR76618${i}.sam
-
-
+	echo "hi_${item%.*}"
+	hisat2 -p 16 -t --dta -x /media/hp/disk1/DYY/reference/index/Escherichia_coli/genome_index 
+	-U /media/hp/disk1/DYY/sra_fq_RNAseq/Escherichia_coli/fastq/${item%.*}.sra.fastq.gz 
+	-S /media/hp/Katniss/DYY/aligned/Bacillus_subtilis/experiment1/${item%.*}.sam 
+	2>>/media/hp/Katniss/DYY/aligned/Bacillus_subtilis/experiment1/mapping_repo.txt
+	
 done
