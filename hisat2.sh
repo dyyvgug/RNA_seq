@@ -1,13 +1,8 @@
 #!/bin/bash
 
-cd /media/hp/disk1/DYY/sra_fq_RNAseq/Bacillus_subtilis/experiment1
 for item in $(ls *.sra)
 do
-	echo "hi_${item%.*}"
-	hisat2 -p 16 -t --dta --rna-strandness RF --max-intronlen 100000 
-	-x /media/hp/disk1/DYY/reference/index/Bacillus_subtilis/genome_index 
-	-U /media/hp/disk1/DYY/sra_fq_RNAseq/Bacillus_subtilis/experiment1/fastq/${item%.*}.sra.fastq.gz 
-	-S /media/hp/Katniss/DYY/aligned/Bacillus_subtilis/experiment1/${item%.*}.sam 
-	2>>/media/hp/Katniss/DYY/aligned/Bacillus_subtilis/experiment1/mapping_repo.txt
-	
+        echo "hi_${item%.*}"
+        hisat2 -p 30 -t --dta --rna-strandness R --max-intronlen 300000 -x ./index/genome_index -U ./fastq/${item%.*}.sra.fastq.gz -S ./${item%.*}.sam 2>>./mapping_repo.txt
+
 done
