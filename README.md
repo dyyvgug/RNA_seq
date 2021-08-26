@@ -6,6 +6,7 @@
     conda install fastx_toolkit
     conda install hisat2
     conda install samtools
+    
 
 **step 1: Download SRA files, high-throughput raw sequencing data.**
   method one:using the prefetch function of the SRA-tools.
