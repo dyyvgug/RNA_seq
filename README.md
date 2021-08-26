@@ -1,5 +1,6 @@
 # RNAseq
-** tools preparation **
+**tools preparation**
+
     conda install sra-tools
     conda install fastqc
     conda install hisat2
