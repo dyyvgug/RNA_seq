@@ -3,6 +3,7 @@
 
     conda install sra-tools
     conda install fastqc
+    conda install fastx_toolkit
     conda install hisat2
     conda install samtools
 
