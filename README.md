@@ -34,6 +34,9 @@
 **step 2:Unzip the SRA file and do quality control**
 
     $ bash SRA-QC.sh
+
+    If you want to do further quality control, then unzip fastq.gz firstly by 'gzip -d *.gz', then 'rename 's/fastq/fq/g' *', run '$ bash quality_filter.sh'.
+    If you need to remove the adapter then run ''.
 **step 3:Download the genome file and annotation file for the corresponding specie**
 Find the corresponding genome in NCBI, copy the download link, and download it directly using the wget command.
   E.g:download genome of *Drosophila_melanogaster*,and the annotation file is gff,the same download method.
