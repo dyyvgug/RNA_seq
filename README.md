@@ -41,7 +41,7 @@ If you need to remove the adapter then run '$bash clipper.sh'.
 
 **Recently, I wrote a pipeline.sh to run step2-step10 automatically**
 
-    $ bash pipeline.sh
+    $ sbatch pipeline.sh Caenorhabditis_elegans
 
 
 **step 3:Download the genome file and annotation file for the corresponding specie**
