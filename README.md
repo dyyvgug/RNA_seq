@@ -39,7 +39,7 @@ If you want to do further quality control, then unzip fastq.gz firstly by 'gzip 
 If you need to remove the adapter then run '$bash clipper.sh'.
 
 
-**recently, I wrote a pipeline.sh to run step2-step10 automatically**
+**Recently, I wrote a pipeline.sh to run step2-step10 automatically**
 
     $ bash pipeline.sh
 
