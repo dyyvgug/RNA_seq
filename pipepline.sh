@@ -40,7 +40,7 @@ done
 #for item in $(ls *.sra)
 #do
 #        echo "hi_${item%.*}"
-#        hisat2 -p 30 -t --dta --rna-strandness R -x /proj/y.dong/genome/$1/index/genome_index -U ./clipper_quality/${item%.*}.sra_qua.fq -S ./${item%.*}.sam 2>>./mapping_repo.txt
+#        hisat2 -p 30 -t --dta --rna-strandness R -x /proj/y.dong/genome/$1/index/genome_index -U ./clipper_quality/${item%.*}.sra_qua.fq -S ./aligned/${item%.*}.sam 2>>./mapping_repo.txt
 #done
 
 cd ./aligned
