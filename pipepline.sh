@@ -40,12 +40,19 @@ cd ./aligned
 for item in $(ls *.sam)
 do
         echo "sam_${item%.*}"
-        samtools sort -@ 30 -o ${item%.*}.bam ${item%.*}.sam
+	samtools view -b -@ 30 -o ${item%.*}.bam ${item%.*}.sam
+	samtools flagstat ${item%.*}.bam > ${item%.*}.bam.flag
+	samtools sort -@ 30 -o ${item%.*}_sort.bam ${item%.*}.bam
+done
 
+
+for item in $(ls *.sam)
+do
         echo "str_${item%.*}"
-        stringtie -p 30 --rf -G /proj/y.dong/genome/$1/genomic.gff -o ./${item%.*}.gtf -l ${item%.*} ${item%.*}.bam -A ${item%.*}_abund.out
+        stringtie -p 30 --rf -G /proj/y.dong/genome/$1/genomic.gff -o ./${item%.*}.gtf -l ${item%.*} ${item%.*}_sort.bam -A ${item%.*}_abund.out
 
 done
+
 
 ls *.gtf > mergelist.txt
 stringtie --merge -p 30 -G /proj/y.dong/genome/$1/genomic.gff -o stringtie_merged.gtf mergelist.txt
