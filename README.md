@@ -9,28 +9,37 @@
     
 
 **step 1: Download SRA files, high-throughput raw sequencing data.**
-  method one:using the prefetch function of the SRA-tools.
+  ^method one 1.1:using the prefetch function of the SRA-tools.
     E.g:download SRR3589957-SRR3589965(RNAseq of *Homo sapiens* 293 cell line)
   
     for i in `seq 57 65`;
     do    
     prefetch SRR35899${i}
     done
-  method two:using the FTP protocol.
+    
+  ^method two 1.2:using the FTP protocol.
     E.g:download SRR5422017-SRR5422019(RNAseq of *Saccharomyces cerevisiae*)
     
     for i in `seq 7 9`;
     do
     wget -c -t 0 ftp://ftp-trace.ncbi.nlm.nih.gov/sra/sra-instant/reads/ByRun/sra/SRR/SRR542/SRR542201${i}/SRR542201${i}.sra	#new
     done
-  method three:using Entrez Direct package.
+    
+  ^method three 1.3:using Entrez Direct package.
     E.g:download all SRA files under the SRP091493 project number and unzip those SRA file.
   
     $ esearch -db sra -query SRP091493 | efetch --format runinfo | cut -d ',' -f 1 | grep SRR | xargs fastq-dump --split-files –bzip2
-   method four:using aspera.
+    
+  ^method four 1.4:using aspera.
     E.g:all SRA files in file a can be downloaded. File a can be directly accessed by the NCBI project into the accession list option in all runs.
     
     $ prefetch -t ascp -a "/home/user/.aspera/connect/bin/ascp|/home/user/.aspera/connect/etc/asperaweb_id_dsa.openssh" --option-file SRR_Acc_List.txt -O ./
+  
+  ^.^ method five 1.5: simple automatic download
+    E.g:all SRA files in file a can be downloaded. File a can be directly accessed by the NCBI project into the accession list option in all runs.
+    
+    $ bash auto_get_srr.sh
+
 **step 2:Unzip the SRA file and do quality control**
 
     $ bash SRA-QC.sh
