@@ -65,13 +65,12 @@ ls *.gtf > mergelist.txt
 stringtie --merge -p 30 -G /proj/y.dong/genome/$1/genomic.gff -o stringtie_merged.gtf mergelist.txt
 
 
-mkdir ./ballgown
-for item in $(ls *.bam)
-do
-	echo "ball_${item%.*}"
-	stringtie -e -B -p 30 -G stringtie_merged.gtf -o ./ballgown/${item%.*}/${item%.*}.gtf ${item%.*}.bam
-
-done
+#mkdir ./ballgown
+#for item in $(ls *.bam)
+#do
+#	echo "ball_${item%.*}"
+#	stringtie -e -B -p 30 -G stringtie_merged.gtf -o ./ballgown/${item%.*}/${item%.*}.gtf ${item%.*}.bam
+#done
 
 # Set fixed directory and extension
 Dir="./"
